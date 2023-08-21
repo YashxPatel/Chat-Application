@@ -1,3 +1,2 @@
-# Application
-A simple note application using node js
-f
+# ToDo Application
+A simple todo application using node js
