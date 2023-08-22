@@ -1,52 +1,63 @@
-import { useState } from 'react'
+import React, { useState } from 'react';
+import { useCookies } from 'react-cookie';
 
-const Modal = ({ mode, setShowModal, getData, task}) => {
-  const editMode = mode === 'edit' ?  true : false
+const Modal = ({ mode, setShowModal, getData, task }) => {
+  const [cookies, setCookie, removeCookie] = useCookies(null)
+  const editMode = mode === 'edit' ? true : false;
 
   const [data, setData] = useState({
-    user_email: editMode ? task.user_email : 'abc25@abc.com',
-    title: editMode ? task.title : null,
+    user_email: editMode ? task.user_email : cookies.Email,
+    title: editMode ? task.title : '',
     progress: editMode ? task.progress : 50,
-    date: editMode ? "" : new Date()
-  })
+    date: editMode ? task.date : new Date(),
+  });
 
   const postData = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8000/todos', {
-        method: "POST",
+      const response = await fetch(`${process.env.REACT_APP_SERVERURL}/todos`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
+        body: JSON.stringify(data),
+      });
       if (response.status === 200) {
-        console.log('WORKED')
-        setShowModal(false)
-        getData()
+        console.log('WORKED');
+        setShowModal(false);
+        getData();
       }
-    } catch(err) {
-      console.error(err)
+    } catch (err) {
+      console.error(err);
     }
-  }
+  };
 
-  const editData = async(e) => {
-
-  }
+  const editData = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${process.env.REACT_APP_SERVERURL}/todos/${task.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (response.status === 200) {
+        setShowModal(false);
+        getData();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleChange = (e) => {
-    const {name, value} = e.target
+    const { name, value } = e.target;
 
-    setData(data => ({
-      ...data, 
-      [name] : value
-    }))
+    setData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
-    console.log(data)
-  }
-
-
-
-    return (
-      <div className="overlay"> 
+  return (
+    <div className="overlay">
       <div className="modal">
         <div className="form-title-container">
           <h3>Let's {mode} your task</h3>
@@ -55,31 +66,29 @@ const Modal = ({ mode, setShowModal, getData, task}) => {
 
         <form>
           <input
-          required
-          maxLength={38}
-          placeholder="Your Task goes here"
-          name="title"
-          value={data.title}
-          onChange={handleChange}
+            required
+            maxLength={38}
+            placeholder="Your Task goes here"
+            name="title"
+            value={data.title}
+            onChange={handleChange}
           />
-          <br/>
-          <label for="range">Drag to select your current progress</label>
-          <input 
-          type="range"
-          id="range"
-          min="0"
-          max="100"
-          name="progress"
-          value={"data.progress"}
-          onChange={handleChange}
+          <br />
+          <label htmlFor="range">Drag to select your current progress</label>
+          <input
+            type="range"
+            id="range"
+            min="0"
+            max="100"
+            name="progress"
+            value={data.progress}
+            onChange={handleChange}
           />
-          <input className="mode" type="submit" onClick={editMode ? '': postData} />
+          <input className="mode" type="submit" onClick={editMode ? editData : postData} />
         </form>
+      </div>
+    </div>
+  );
+};
 
-      </div>
-      </div>
-    )
-}
-  
-  
 export default Modal;
